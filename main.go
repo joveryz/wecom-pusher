@@ -16,6 +16,6 @@ func main() {
 func init() {
 	jsonConfig := flag.String("c", "config.json", "config path")
 	flag.Parse()
-	logger.Infof("Loading config from %s", jsonConfig)
+	logger.Infof("Loading config from %s", *jsonConfig)
 	config.LoadConfig(*jsonConfig)
 }

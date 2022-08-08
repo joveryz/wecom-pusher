@@ -121,11 +121,11 @@ func generateAndPushGrafanaTextCardMessageFromContext(context *gin.Context, alia
 	cardUrl := "http://grafana.sys.ink:8080"
 	isSucc = true
 	for _, m := range messages {
-		if strings.HasPrefix(m, " - summary =") {
-			description = m
+		if strings.HasPrefix(m, " - summary = ") {
+			description = strings.ReplaceAll(m, " - summary = ", "")
 		}
 		if strings.HasPrefix(m, "Source: ") {
-			cardUrl = m
+			cardUrl = strings.ReplaceAll(m, "Source: ", "")
 		}
 	}
 
