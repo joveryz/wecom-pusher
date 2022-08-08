@@ -89,17 +89,42 @@ func generateWeComTextCardMessageFromContext(context *gin.Context, alias string)
 }
 
 func generateGrafanaTextCardMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
-	bytes, err := ioutil.ReadAll(context.Request.Body)
-	if err != nil {
-		logger.Errorf("generate grafana text card message failed, error: %+v, body: %s", err, string(bytes))
-		return nil, err
-	}
+	bytes, _ := ioutil.ReadAll(context.Request.Body)
 	var grafanaMsg grafana.GrafanaMessage
 	err = json.Unmarshal(bytes, &grafanaMsg)
-	data, err = json.Marshal(grafanaMsg)
+	if err != nil {
+		logger.Errorf("unmarshal grafana message failed, error: %+v, body: %s", err, string(bytes))
+		return nil, err
+	}
+
+	messages := strings.Split(grafanaMsg.Message, "\n")
+	description := ""
+	cardUrl := "http://grafana.sys.ink:8080"
+
+	for _, m := range messages {
+		if strings.HasPrefix(m, " - summary =") {
+			description = m
+		}
+		if strings.HasPrefix(m, "Source =") {
+			cardUrl = m
+		}
+	}
+
+	msg := wecom.TextCardMessage{
+		Touser:  config.Config.WeComConfigs[alias].Receiver,
+		Msgtype: "textcard",
+		Agentid: config.Config.WeComConfigs[alias].AgentId,
+	}
+
+	msg.TextCard.Title = grafanaMsg.Title
+	msg.TextCard.Description = description
+	msg.TextCard.URL = cardUrl
+
+	data, err = json.Marshal(msg)
 	if err != nil {
 		logger.Errorf("generate grafana text card message failed, error: %v", err)
 		return nil, err
 	}
+
 	return data, err
 }
