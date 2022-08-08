@@ -36,20 +36,20 @@ func parseDestinationFromContext(context *gin.Context) (value []string) {
 	return destination
 }
 
-func generateWeComMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
+func generateAndPushWeComMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	msgType := parseFromContext(context, "type")
 	if msgType == "text" {
-		return generateWeComTextMessageFromContext(context, aliases)
+		return generateAndPushWeComTextMessageFromContext(context, aliases)
 	} else if msgType == "textcard" {
-		return generateWeComTextCardMessageFromContext(context, aliases)
+		return generateAndPushWeComTextCardMessageFromContext(context, aliases)
 	} else if msgType == "grafana" {
-		return generateGrafanaTextCardMessageFromContext(context, aliases)
+		return generateAndPushGrafanaTextCardMessageFromContext(context, aliases)
 	} else {
 		return false
 	}
 }
 
-func generateWeComTextMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
+func generateAndPushWeComTextMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	content := parseFromContext(context, "content")
 	isSucc = true
 	for _, alias := range aliases {
@@ -75,7 +75,7 @@ func generateWeComTextMessageFromContext(context *gin.Context, aliases []string)
 	return isSucc
 }
 
-func generateWeComTextCardMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
+func generateAndPushWeComTextCardMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	title := parseFromContext(context, "title")
 	description := parseFromContext(context, "description")
 	cardUrl := parseFromContext(context, "cardUrl")
@@ -107,7 +107,7 @@ func generateWeComTextCardMessageFromContext(context *gin.Context, aliases []str
 	return isSucc
 }
 
-func generateGrafanaTextCardMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
+func generateAndPushGrafanaTextCardMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	body, _ := ioutil.ReadAll(context.Request.Body)
 	var grafanaMsg grafana.GrafanaMessage
 	err := json.Unmarshal(body, &grafanaMsg)

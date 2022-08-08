@@ -6,8 +6,8 @@ import (
 )
 
 func Start() (err error) {
+	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
-	gin.SetMode(gin.DebugMode)
 	engine.Use(logger.ApiLogger())
 	SetRoute(engine)
 	err = engine.Run("0.0.0.0:18080")

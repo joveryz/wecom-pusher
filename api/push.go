@@ -6,7 +6,7 @@ import (
 
 func Push(context *gin.Context) {
 	destination := parseDestinationFromContext(context)
-	isSucc := generateWeComMessageFromContext(context, destination)
+	isSucc := generateAndPushWeComMessageFromContext(context, destination)
 	if !isSucc {
 		context.JSON(500, "push failed")
 		return
