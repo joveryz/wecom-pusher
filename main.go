@@ -11,7 +11,7 @@ import (
 func main() {
 	fmt.Println("helloworld")
 	wecom.SendTextMessage("test", "downloadpush")
-	wecom.SendTextCardMessage("test cccc", "test", "https://www.baidu.com", "homelabpush")
+	wecom.SendTextCardMessage("test cccc", "test", "https://www.baidu.com", "downloadpush")
 }
 
 func init() {

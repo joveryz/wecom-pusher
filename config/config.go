@@ -16,7 +16,19 @@ type WeComJsonConfig struct {
 	AgentId    string
 }
 
-var ConfigMap map[string]WeComJsonConfig
+type ConfigArray struct {
+	User         string
+	Password     string
+	WeComConfigs []WeComJsonConfig
+}
+
+type ConfigMap struct {
+	User         string
+	Password     string
+	WeComConfigs map[string]WeComJsonConfig
+}
+
+var Config ConfigMap
 
 func LoadConfig(jsonConfigPath string) (err error) {
 	file, err := ioutil.ReadFile(jsonConfigPath)
@@ -25,18 +37,20 @@ func LoadConfig(jsonConfigPath string) (err error) {
 		os.Exit(1)
 	}
 
-	var configs []WeComJsonConfig
-	err = json.Unmarshal([]byte(file), &configs)
+	var configArray ConfigArray
+	err = json.Unmarshal([]byte(file), &configArray)
 	if err != nil {
 		logger.Error(err)
 		os.Exit(1)
 	}
 
-	ConfigMap = make(map[string]WeComJsonConfig)
-	for _, s := range configs {
-		ConfigMap[s.Alias] = s
+	Config.User = configArray.User
+	Config.Password = configArray.Password
+	Config.WeComConfigs = make(map[string]WeComJsonConfig)
+	for _, s := range configArray.WeComConfigs {
+		Config.WeComConfigs[s.Alias] = s
 	}
 
-	logger.Infof("ConfigMap: %+v\n", ConfigMap)
+	logger.Infof("Config: %+v\n", Config)
 	return err
 }

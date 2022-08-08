@@ -22,9 +22,9 @@ func SendTextMessage(content string, alias string) (err error) {
 
 	url := fmt.Sprintf("https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s", token)
 	msg := TextMessage{
-		Touser:  config.ConfigMap[alias].Receiver,
+		Touser:  config.Config.WeComConfigs[alias].Receiver,
 		Msgtype: "text",
-		Agentid: config.ConfigMap[alias].AgentId,
+		Agentid: config.Config.WeComConfigs[alias].AgentId,
 	}
 
 	msg.Text.Content = content
@@ -56,9 +56,9 @@ func SendTextCardMessage(content string, title string, cardUrl string, alias str
 	url := fmt.Sprintf("https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s", token)
 
 	msg := TextCardMessage{
-		Touser:  config.ConfigMap[alias].Receiver,
+		Touser:  config.Config.WeComConfigs[alias].Receiver,
 		Msgtype: "textcard",
-		Agentid: config.ConfigMap[alias].AgentId,
+		Agentid: config.Config.WeComConfigs[alias].AgentId,
 	}
 
 	msg.TextCard.Title = title

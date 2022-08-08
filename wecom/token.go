@@ -20,7 +20,7 @@ type tokenType struct {
 var tokenMap map[string]tokenType
 
 func GetToken(alias string) (tokenString string, err error) {
-	_, ok := config.ConfigMap[alias]
+	_, ok := config.Config.WeComConfigs[alias]
 	if !ok {
 		return "", errors.New("alias not found in configs: " + alias)
 	}
@@ -32,7 +32,7 @@ func GetToken(alias string) (tokenString string, err error) {
 
 	logger.Infof("No valid token for %s, will require a new one.", alias)
 
-	url := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?" + "corpid=" + config.ConfigMap[alias].CorpId + "&corpsecret=" + config.ConfigMap[alias].CorpSecret
+	url := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?" + "corpid=" + config.Config.WeComConfigs[alias].CorpId + "&corpsecret=" + config.Config.WeComConfigs[alias].CorpSecret
 	resp, err := http.Get(url)
 	if err != nil {
 		logger.Error(err)
