@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -46,11 +45,7 @@ func init() {
 	Logger.SetReportCaller(true)
 }
 
-func Test() {
-	fmt.Println("logger")
-}
-
-func api_logger() gin.HandlerFunc {
+func ApiLogger() gin.HandlerFunc {
 	log := Entry
 	return func(c *gin.Context) {
 		start := time.Now()
