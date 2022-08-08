@@ -1,0 +1,20 @@
+package api
+
+import (
+	"github.com/TongboZhang/wecom-pusher/logger"
+	"github.com/gin-gonic/gin"
+)
+
+func Start() (err error) {
+	engine := gin.Default()
+	gin.SetMode(gin.DebugMode)
+	engine.Use(logger.ApiLogger())
+	SetRoute(engine)
+	err = engine.Run("0.0.0.0:18080")
+	return err
+}
+
+func SetRoute(r *gin.Engine) {
+	r.POST("/basic_push", TokenAuth, BasicPush)
+	r.POST("/grafana_push", BasicAuth(), BasicPush)
+}
