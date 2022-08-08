@@ -43,7 +43,7 @@ func generateWeComMessageFromContext(context *gin.Context, alias string) (data [
 	} else if msgType == "textcard" {
 		return generateWeComTextCardMessageFromContext(context, alias)
 	} else if msgType == "grafana" {
-		return nil, err
+		return generateGrafanaTextCardMessageFromContext(context, alias)
 	} else {
 		return nil, errors.New("type not supported, type: " + msgType)
 	}
