@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TongboZhang/wecom-pusher/config"
+	"github.com/TongboZhang/wecom-pusher/grafana"
 	"github.com/TongboZhang/wecom-pusher/logger"
 	"github.com/TongboZhang/wecom-pusher/wecom"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"strings"
 )
 
@@ -80,7 +82,23 @@ func generateWeComTextCardMessageFromContext(context *gin.Context, alias string)
 
 	data, err = json.Marshal(msg)
 	if err != nil {
-		logger.Errorf("generate text message failed, error: %v", err)
+		logger.Errorf("generate text card message failed, error: %v", err)
+		return nil, err
+	}
+	return data, err
+}
+
+func generateGrafanaTextCardMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
+	bytes, err := ioutil.ReadAll(context.Request.Body)
+	if err != nil {
+		logger.Errorf("generate grafana text card message failed, error: %+v, body: %s", err, string(bytes))
+		return nil, err
+	}
+	var grafanaMsg grafana.GrafanaMessage
+	err = json.Unmarshal(bytes, &grafanaMsg)
+	data, err = json.Marshal(grafanaMsg)
+	if err != nil {
+		logger.Errorf("generate grafana text card message failed, error: %v", err)
 		return nil, err
 	}
 	return data, err
