@@ -90,6 +90,7 @@ func generateWeComTextCardMessageFromContext(context *gin.Context, alias string)
 
 func generateGrafanaTextCardMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
 	bytes, _ := ioutil.ReadAll(context.Request.Body)
+	logger.Errorf("request body, body: %s", string(bytes))
 	var grafanaMsg grafana.GrafanaMessage
 	err = json.Unmarshal(bytes, &grafanaMsg)
 	if err != nil {
