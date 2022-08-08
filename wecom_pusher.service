@@ -1,0 +1,10 @@
+[Unit]
+Description=WeComPusher
+After=network.target
+ 
+[Service]
+ExecStart=/usr/bin/wecom_pusher -c /etc/wecom_pusher/config.json
+User=root
+
+[Install]
+WantedBy=multi-user.target
