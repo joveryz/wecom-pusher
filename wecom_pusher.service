@@ -3,7 +3,7 @@ Description=WeComPusher
 After=network.target
  
 [Service]
-ExecStart=/usr/bin/wecom_pusher -c /etc/wecom_pusher/config.json
+ExecStart=/usr/bin/wecom-pusher -c /etc/wecom_pusher/config.json
 User=root
 
 [Install]
