@@ -5,17 +5,13 @@ import (
 
 	"github.com/TongboZhang/wecom-pusher/config"
 	"github.com/TongboZhang/wecom-pusher/logger"
-)
-
-var (
-	BuildTime string
-	GoVersion string
-	GitHead   string
+	"github.com/TongboZhang/wecom-pusher/wecom"
 )
 
 func main() {
 	fmt.Println("helloworld")
-	logger.Error()
+	wecom.SendTextMessage("test", "downloadpush")
+	wecom.SendTextCardMessage("test cccc", "test", "https://www.baidu.com", "homelabpush")
 }
 
 func init() {
