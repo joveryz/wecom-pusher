@@ -1,16 +1,15 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
+	"io/ioutil"
+	"strings"
+
 	"github.com/TongboZhang/wecom-pusher/config"
 	"github.com/TongboZhang/wecom-pusher/grafana"
 	"github.com/TongboZhang/wecom-pusher/logger"
 	"github.com/TongboZhang/wecom-pusher/wecom"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
-	"strings"
 )
 
 func parseFromContext(context *gin.Context, key string) (value string) {
@@ -37,96 +36,122 @@ func parseDestinationFromContext(context *gin.Context) (value []string) {
 	return destination
 }
 
-func generateWeComMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
+func generateWeComMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	msgType := parseFromContext(context, "type")
 	if msgType == "text" {
-		return generateWeComTextMessageFromContext(context, alias)
+		return generateWeComTextMessageFromContext(context, aliases)
 	} else if msgType == "textcard" {
-		return generateWeComTextCardMessageFromContext(context, alias)
+		return generateWeComTextCardMessageFromContext(context, aliases)
 	} else if msgType == "grafana" {
-		return generateGrafanaTextCardMessageFromContext(context, alias)
+		return generateGrafanaTextCardMessageFromContext(context, aliases)
 	} else {
-		return nil, errors.New("type not supported, type: " + msgType)
+		return false
 	}
 }
 
-func generateWeComTextMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
+func generateWeComTextMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	content := parseFromContext(context, "content")
-	msg := wecom.TextMessage{
-		Touser:  config.Config.WeComConfigs[alias].Receiver,
-		Msgtype: "text",
-		Agentid: config.Config.WeComConfigs[alias].AgentId,
+	isSucc = true
+	for _, alias := range aliases {
+		msg := wecom.TextMessage{
+			Touser:  config.Config.WeComConfigs[alias].Receiver,
+			Msgtype: "text",
+			Agentid: config.Config.WeComConfigs[alias].AgentId,
+		}
+		msg.Text.Content = content
+		data, err := json.Marshal(msg)
+		if err != nil {
+			isSucc = false
+			logger.Errorf("generate text message failed, skip pushing, error: %v", err)
+			continue
+		}
+		err = wecom.SendTextMessage(data, alias)
+		if err != nil {
+			isSucc = false
+			logger.Errorf("push text message failed, error: %v", err)
+			continue
+		}
 	}
-	msg.Text.Content = content
-
-	data, err = json.Marshal(msg)
-	if err != nil {
-		logger.Errorf("generate text message failed, error: %v", err)
-		return nil, err
-	}
-	return data, err
+	return isSucc
 }
 
-func generateWeComTextCardMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
+func generateWeComTextCardMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	title := parseFromContext(context, "title")
 	description := parseFromContext(context, "description")
 	cardUrl := parseFromContext(context, "cardUrl")
-	msg := wecom.TextCardMessage{
-		Touser:  config.Config.WeComConfigs[alias].Receiver,
-		Msgtype: "textcard",
-		Agentid: config.Config.WeComConfigs[alias].AgentId,
-	}
+	isSucc = true
+	for _, alias := range aliases {
+		msg := wecom.TextCardMessage{
+			Touser:  config.Config.WeComConfigs[alias].Receiver,
+			Msgtype: "textcard",
+			Agentid: config.Config.WeComConfigs[alias].AgentId,
+		}
 
-	msg.TextCard.Title = title
-	msg.TextCard.Description = description
-	msg.TextCard.URL = cardUrl
+		msg.TextCard.Title = title
+		msg.TextCard.Description = description
+		msg.TextCard.URL = cardUrl
 
-	data, err = json.Marshal(msg)
-	if err != nil {
-		logger.Errorf("generate text card message failed, error: %v", err)
-		return nil, err
+		data, err := json.Marshal(msg)
+		if err != nil {
+			isSucc = false
+			logger.Errorf("generate text message failed, skip pushing, error: %v", err)
+			continue
+		}
+		err = wecom.SendTextMessage(data, alias)
+		if err != nil {
+			isSucc = false
+			logger.Errorf("push text message failed, error: %v", err)
+			continue
+		}
 	}
-	return data, err
+	return isSucc
 }
 
-func generateGrafanaTextCardMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
+func generateGrafanaTextCardMessageFromContext(context *gin.Context, aliases []string) (isSucc bool) {
 	body, _ := ioutil.ReadAll(context.Request.Body)
-	context.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	var grafanaMsg grafana.GrafanaMessage
-	err = json.Unmarshal(body, &grafanaMsg)
+	err := json.Unmarshal(body, &grafanaMsg)
 	if err != nil {
-		logger.Errorf("unmarshal grafana message failed, error: %+v, body: %s", err, string(bytes))
-		return nil, err
+		logger.Errorf("unmarshal grafana request body failed, error: %+v, body: %s", err, string(body))
+		return false
 	}
 
 	messages := strings.Split(grafanaMsg.Message, "\n")
 	description := ""
 	cardUrl := "http://grafana.sys.ink:8080"
-
+	isSucc = true
 	for _, m := range messages {
 		if strings.HasPrefix(m, " - summary =") {
 			description = m
 		}
-		if strings.HasPrefix(m, "Source =") {
+		if strings.HasPrefix(m, "Source: ") {
 			cardUrl = m
 		}
 	}
 
-	msg := wecom.TextCardMessage{
-		Touser:  config.Config.WeComConfigs[alias].Receiver,
-		Msgtype: "textcard",
-		Agentid: config.Config.WeComConfigs[alias].AgentId,
+	for _, alias := range aliases {
+		msg := wecom.TextCardMessage{
+			Touser:  config.Config.WeComConfigs[alias].Receiver,
+			Msgtype: "textcard",
+			Agentid: config.Config.WeComConfigs[alias].AgentId,
+		}
+
+		msg.TextCard.Title = grafanaMsg.Title
+		msg.TextCard.Description = description
+		msg.TextCard.URL = cardUrl
+
+		data, err := json.Marshal(msg)
+		if err != nil {
+			isSucc = false
+			logger.Errorf("generate text message failed, skip pushing, error: %v", err)
+			continue
+		}
+		err = wecom.SendTextMessage(data, alias)
+		if err != nil {
+			isSucc = false
+			logger.Errorf("push text message failed, error: %v", err)
+			continue
+		}
 	}
-
-	msg.TextCard.Title = grafanaMsg.Title
-	msg.TextCard.Description = description
-	msg.TextCard.URL = cardUrl
-
-	data, err = json.Marshal(msg)
-	if err != nil {
-		logger.Errorf("generate grafana text card message failed, error: %v", err)
-		return nil, err
-	}
-
-	return data, err
+	return isSucc
 }
