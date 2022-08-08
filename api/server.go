@@ -15,6 +15,5 @@ func Start() (err error) {
 }
 
 func SetRoute(r *gin.Engine) {
-	r.POST("/basic_push", TokenAuth, BasicPush)
-	r.POST("/grafana_push", BasicAuth(), BasicPush)
+	r.POST("/push", TokenAuth, Push)
 }

@@ -6,18 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func BasicAuth() func(context *gin.Context) {
-	return gin.BasicAuth(gin.Accounts{
-		config.Config.User: config.Config.Password,
-	})
-}
+var handler func(context *gin.Context)
 
 func TokenAuth(context *gin.Context) {
 	token := parseFromContext(context, "token")
-	if token != config.Config.Token {
-		logger.Warnf("token validation failed, token: %s", token)
-		context.String(401, "token validation failed")
-		context.Abort()
+	if token == config.Config.Token {
+		logger.Info("token validation passed")
 		return
 	}
+
+	if handler == nil {
+		handler = gin.BasicAuth(gin.Accounts{config.Config.User: config.Config.Password})
+	}
+
+	handler(context)
 }

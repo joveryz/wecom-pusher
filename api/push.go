@@ -2,34 +2,30 @@ package api
 
 import (
 	"fmt"
-	"github.com/TongboZhang/wecom-pusher/config"
 	"github.com/TongboZhang/wecom-pusher/logger"
 	"github.com/TongboZhang/wecom-pusher/wecom"
 	"github.com/gin-gonic/gin"
 	"strings"
 )
 
-func BasicPush(context *gin.Context) {
-	content := parseFromContext(context, "content")
-	destinationString := parseFromContext(context, "destination")
-	var destination []string
-	if destinationString != "" {
-		destination = strings.Split(destinationString, "|")
-	} else {
-		destination = config.Config.Aliases
-	}
-
-	var errString []string
+func Push(context *gin.Context) {
+	destination := parseDestinationFromContext(context)
+	var errStrings []string
 	for _, alias := range destination {
-		err := wecom.SendTextMessage(content, alias)
+		data, err := generateWeComMessageFromContext(context, alias)
 		if err != nil {
-			errString = append(errString, fmt.Sprintf("basic push to wecom failed, content: %s, alias: %s, error: %+v", content, alias, err))
+			errStrings = append(errStrings, fmt.Sprintf("basic push to generate wecom msg failed, data: %s, alias: %s, error: %+v", string(data), alias, err))
+			continue
+		}
+		err = wecom.SendTextMessage(data, alias)
+		if err != nil {
+			errStrings = append(errStrings, fmt.Sprintf("basic push to wecom failed, data: %s, alias: %s, error: %+v", string(data), alias, err))
 		}
 	}
 
-	if len(errString) != 0 {
-		context.String(500, strings.Join(errString, "|"))
-		logger.Error(strings.Join(errString, "|"))
+	if len(errStrings) != 0 {
+		context.JSON(500, errStrings)
+		logger.Error(strings.Join(errStrings, "|"))
 		return
 	}
 

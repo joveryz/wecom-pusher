@@ -8,12 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/TongboZhang/wecom-pusher/config"
 	"github.com/TongboZhang/wecom-pusher/logger"
 )
 
-func SendTextMessage(content string, alias string) (err error) {
-	logger.Infof("send text message: %s", content)
+func SendTextMessage(data []byte, alias string) (err error) {
+	logger.Infof("send text message: %s", string(data))
 	token, err := GetToken(alias)
 	if err != nil {
 		logger.Errorf("get token failed for %s, error: %v", alias, err)
@@ -21,32 +20,18 @@ func SendTextMessage(content string, alias string) (err error) {
 	}
 
 	url := fmt.Sprintf("https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s", token)
-	msg := TextMessage{
-		Touser:  config.Config.WeComConfigs[alias].Receiver,
-		Msgtype: "text",
-		Agentid: config.Config.WeComConfigs[alias].AgentId,
-	}
-
-	msg.Text.Content = content
-
-	data, err := json.Marshal(msg)
-	if err != nil {
-		logger.Errorf("send text message failed, error: %v", err)
-		return err
-	}
-
 	_, err = post(url, data)
 	if err != nil {
 		logger.Errorf("send text message failed, error: %v", err)
 		return err
 	}
 
-	logger.Infof("send text message succeeded: %s", content)
+	logger.Infof("send text message succeeded: %s", string(data))
 	return err
 }
 
-func SendTextCardMessage(content string, title string, cardUrl string, alias string) (err error) {
-	logger.Infof("send text card message: %s", content)
+func SendTextCardMessage(data []byte, alias string) (err error) {
+	logger.Infof("send text card message: %s", string(data))
 	token, err := GetToken(alias)
 	if err != nil {
 		logger.Errorf("get token failed for %s, error: %+v", alias, err)
@@ -54,30 +39,13 @@ func SendTextCardMessage(content string, title string, cardUrl string, alias str
 	}
 
 	url := fmt.Sprintf("https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s", token)
-
-	msg := TextCardMessage{
-		Touser:  config.Config.WeComConfigs[alias].Receiver,
-		Msgtype: "textcard",
-		Agentid: config.Config.WeComConfigs[alias].AgentId,
-	}
-
-	msg.TextCard.Title = title
-	msg.TextCard.URL = cardUrl
-	msg.TextCard.Description = content
-
-	data, err := json.Marshal(msg)
-	if err != nil {
-		logger.Errorf("send text card message failed, error: %+v", err)
-		return err
-	}
-
 	_, err = post(url, data)
 	if err != nil {
 		logger.Errorf("send text card message failed, error: %+v", err)
 		return err
 	}
 
-	logger.Infof("send text card message succeeded: %s", content)
+	logger.Infof("send text card message succeeded: %s", string(data))
 	return err
 }
 
