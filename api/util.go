@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/TongboZhang/wecom-pusher/config"
@@ -89,10 +90,10 @@ func generateWeComTextCardMessageFromContext(context *gin.Context, alias string)
 }
 
 func generateGrafanaTextCardMessageFromContext(context *gin.Context, alias string) (data []byte, err error) {
-	bytes, _ := ioutil.ReadAll(context.Request.Body)
-	logger.Errorf("request body, body: %s", string(bytes))
+	body, _ := ioutil.ReadAll(context.Request.Body)
+	context.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	var grafanaMsg grafana.GrafanaMessage
-	err = json.Unmarshal(bytes, &grafanaMsg)
+	err = json.Unmarshal(body, &grafanaMsg)
 	if err != nil {
 		logger.Errorf("unmarshal grafana message failed, error: %+v, body: %s", err, string(bytes))
 		return nil, err
