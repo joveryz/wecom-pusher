@@ -118,7 +118,7 @@ func generateAndPushGrafanaTextCardMessageFromContext(context *gin.Context, alia
 
 	messages := strings.Split(grafanaMsg.Message, "\n")
 	description := ""
-	cardUrl := "http://grafana.sys.ink:8080"
+	cardUrl := "https://grafana.sys.ink"
 	isSucc = true
 	for _, m := range messages {
 		if strings.HasPrefix(m, " - summary = ") {
