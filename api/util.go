@@ -21,6 +21,8 @@ func parseFromContext(context *gin.Context, key string) (value string) {
 		value = context.PostForm(key)
 	}
 
+	value = strings.Replace(value, "%0a", "\n", -1)
+	value = strings.Replace(value, "\\n", "\n", -1)
 	return value
 }
 
